@@ -39,6 +39,7 @@ class Point{
         var rgba = this.color;
         var size = this.size;
         
+        gl.disableVertexAttribArray(a_Position);
         // Pass the position of a point to a_Position variable
         gl.vertexAttrib3f(a_Position, xy[0], xy[1], 0.0);
         // Pass the color of a point to u_FragColor variable
@@ -49,6 +50,85 @@ class Point{
         // Draw
         gl.drawArrays(gl.POINTS, 0, 1);
     }
+}
+
+class Triangle{
+    constructor(){
+        this.type="triangle"
+        this.position = [0.0,0.0,0.0];
+        this.color = [1.0,1.0,1.0,1.0];
+        this.size = 5.0;
+    }
+
+    render(){
+        var xy = this.position;
+        var rgba = this.color;
+        var size = this.size;
+
+               // Pass the color of a point to u_FragColor variable
+               gl.uniform4f(u_FragColor, rgba[0], rgba[1], rgba[2], rgba[3]);
+               // Pass the size of a point to u_Size variable
+               gl.uniform1f(u_Size,size);
+       
+               // Draw
+               var d = this.size/200.0
+               drawTriangle( [xy[0],xy[1],xy[0]+d,xy[1],xy[0],xy[1]+d])
+    }
+}
+
+class Circle{
+    constructor(){
+        this.type = "circle";
+        this.position = [0.0,0.0,0.0];
+        this.color = [1.0,1.0,1.0,1.0];
+        this.size = 5.0;
+        this.segments = g_segmentCount;
+    }
+
+    render(){
+        var xy = this.position;
+        var rgba = this.color;
+        var size = this.size;
+
+        // Pass the color of a point to u_FragColor variable
+        gl.uniform4f(u_FragColor, rgba[0], rgba[1], rgba[2], rgba[3]);
+        // Draw
+        
+        var d = this.size/200.0
+               
+        let angleStep = 360/this.segments;
+            for(var angle = 0; angle < 360; angle=angle+angleStep){
+                let centerPt = [xy[0],xy[1]];
+                let angle1=angle;
+                let angle2=angle+angleStep;
+                let vec1=[Math.cos(angle1*Math.PI/180)*d,Math.sin(angle1*Math.PI/180)*d]
+                let vec2=[Math.cos(angle2*Math.PI/180)*d,Math.sin(angle2*Math.PI/180)*d]
+                let pt1 = [centerPt[0]+vec1[0],centerPt[1]+vec1[1]];
+                let pt2 = [centerPt[0]+vec2[0],centerPt[1]+vec2[1]];
+            
+                drawTriangle( [xy[0],xy[1],pt1[0],pt1[1],pt2[0],pt2[1]])
+            }
+
+               
+    }
+}
+
+function drawTriangle(vertices){
+    var n = 3;
+
+    var vertexBuffer = gl.createBuffer();
+    if (!vertexBuffer){
+        console.log("Failed to ceate the buffer object");
+        return -1
+    }
+
+    gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertices),gl.DYNAMIC_DRAW)
+
+
+    gl.vertexAttribPointer(a_Position,2,gl.FLOAT,false,0,0);
+    gl.enableVertexAttribArray(a_Position);
+    gl.drawArrays(gl.TRIANGLES,0,n);
 }
 
 
@@ -109,7 +189,7 @@ var g_shapesList = []
 
 function renderAllShapes(){
 
-    var startTime = performance.now();
+    //var startTime = performance.now();
 
     // Clear <canvas>
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -120,11 +200,12 @@ function renderAllShapes(){
         g_shapesList[i].render()
     }
 
-    var duration = performance.now() - startTime;
-    sendTextToHTML("numdot: " + len + " ms: " + Math.floor(duration) + " fps: " + Math.floor(10000/duration), "numdot");
+    //var duration = performance.now() - startTime;
+    //sendTextToHTML("numdot: " + len + " ms: " + Math.floor(duration) + " fps: " + Math.floor(10000/duration), "numdot");
 
 }
 
+/*
 function sendTextToHTML(text,htmlID){
     var htmlElm = document.getElementById(htmlID);
     if(!htmlElm){
@@ -132,24 +213,34 @@ function sendTextToHTML(text,htmlID){
         return;
     }
     htmlElm.innerHTML = text;
-}
+}*/
 
+// Constants
+const POINT = 0;
+const TRIANGLE = 1;
+const CIRCLE = 2;
 
 let g_selectedColor=[1.0,1.0,1.0,1.0]
 let g_selectedSize = 5;
+let g_selectedType = POINT;
+let g_segmentCount = 10;
 
 function addActionsForHtmlUI(){
     
-    document.getElementById("green").onclick = function() { g_selectedColor = [0.0,1.0,0.0,1.0]; };
-    document.getElementById("red").onclick = function() { g_selectedColor = [1.0,0.0,0.0,1.0]; };
     document.getElementById("clear").onclick = function() { g_shapesList = []; renderAllShapes();};
+
+    document.getElementById("point").onclick = function() { g_selectedType = POINT };
+    document.getElementById("triangle").onclick = function() { g_selectedType = TRIANGLE };
+    document.getElementById("circle").onclick = function() { g_selectedType = CIRCLE };
 
     document.getElementById("redSlide").addEventListener('mouseup',function() {g_selectedColor[0] = this.value/100; })
     document.getElementById("greenSlide").addEventListener('mouseup',function() {g_selectedColor[1] = this.value/100; })
     document.getElementById("blueSlide").addEventListener('mouseup',function() {g_selectedColor[2] = this.value/100; })
 
-    document.getElementById("sizeSlide").addEventListener('mouseup',function() {g_selectedSize = this.value})
 
+
+    document.getElementById("sizeSlide").addEventListener('mouseup',function() {g_selectedSize = this.value})
+    document.getElementById("segmentSlide").addEventListener('mouseup',function() {g_segmentCount = this.value})
 }
 
 
@@ -163,7 +254,7 @@ function main() {
   addActionsForHtmlUI();
 
   // Register function (event handler) to be called on a mouse press
-  //canvas.onmousedown = click;
+  canvas.onmousedown = click;
   canvas.onmousemove = function(ev) { if(ev.buttons == 1) {click(ev) }}
 
   // Specify the color for clearing <canvas>
@@ -176,8 +267,16 @@ function main() {
 function click(ev) {
 
     [x,y] = convertCoordinatesEventToGL(ev);
+    let point;
+    console.log(g_selectedType)
+    if (g_selectedType == POINT){
+        point =  new Point();
+    }else if(g_selectedType == TRIANGLE) {
+        point = new Triangle();
+    }else{
+        point = new Circle();
+    }
 
-    let point = new Point();
     point.position = [x,y];
     point.color = g_selectedColor.slice();
     point.size = g_selectedSize;
