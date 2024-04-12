@@ -220,14 +220,18 @@ const POINT = 0;
 const TRIANGLE = 1;
 const CIRCLE = 2;
 
+// Global Variables
 let g_selectedColor=[1.0,1.0,1.0,1.0]
 let g_selectedSize = 5;
 let g_selectedType = POINT;
 let g_segmentCount = 10;
 
+let fancymode = false;
+
 function addActionsForHtmlUI(){
     
     document.getElementById("clear").onclick = function() { g_shapesList = []; renderAllShapes();};
+    document.getElementById("fancy").onclick = function() { fancy();};
 
     document.getElementById("point").onclick = function() { g_selectedType = POINT };
     document.getElementById("triangle").onclick = function() { g_selectedType = TRIANGLE };
@@ -264,7 +268,14 @@ function main() {
   gl.clear(gl.COLOR_BUFFER_BIT);
 }
 
+// Relating to FancymodeTM
+var cheer = new Audio("assets/clapping.wav");
+
 function click(ev) {
+
+    if(fancymode){
+        cheer.play();
+    }
 
     [x,y] = convertCoordinatesEventToGL(ev);
     let point;
@@ -283,5 +294,28 @@ function click(ev) {
     g_shapesList.push(point);
 
     renderAllShapes();
+
+}
+
+
+// Some of this was informed by tutorials on w3schools.com //
+function fancy(){
+    console.log("Fancy Mode Activated");
+    if(fancymode){
+        return;
+    }
+
+    fancymode = true;
+    document.getElementById("orchestra").src = "assets/curtains_up.gif";
+    
+    // Preloading image
+    var play = new Image();
+    play.src = "assets/orchestra.gif";
+
+    var clapping = new Audio("assets/clapping.wav");
+    clapping.play();
+    var bach = new Audio("assets/bach.mp4")
+
+    setTimeout(function() {document.getElementById("orchestra").src = play.src; bach.play();},5000)
 
 }
