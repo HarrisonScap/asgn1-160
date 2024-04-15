@@ -12,8 +12,8 @@
 
     <style>
         .scale{
-            width: 50%;
-            height: auto;
+            width: auto;
+            height: 400px;
         }
     </style>
 
@@ -23,6 +23,7 @@
 
     <button type="button" id="clear">Clear Canvas</button>
     <button type="button" id="fancy">Fancy Mode</button>
+    <button type="button" id="picture">Draw My Picture!</button>
 
     <br><br>
 
@@ -41,6 +42,14 @@
     Size: <input type="range" min="5" max="40" value="0" class="slider" id="sizeSlide">
     (Circles) Segment Count: <input type="range" min="3" max="10" value="0" class="slider" id="segmentSlide">
     <p>
+
+    <br><br>
+
+    Picture Reference:
+
+    <br><br>
+
+    <img src="assets/dsotm.png" id="dsotm" class="scale">
 
     <script src="lib/webgl-utils.js"></script>
     <script src="lib/webgl-debug.js"></script>
